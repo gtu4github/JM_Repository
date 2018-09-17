@@ -1,0 +1,342 @@
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Sep 10 09:28:03 2018
+
+@author: jm186072
+"""
+
+######import dataset 
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import cv2 
+import os
+import seaborn as sns
+import csv
+import io
+import os
+import cv2
+import imageio
+import urllib3
+import IPython
+import scipy.misc
+from PIL import Image
+from scipy.fftpack import dct, idct
+import matplotlib.image as mpimg
+from scipy import fftpack
+
+#baseDir =os.path.dirname(os.path.abspath('__file__'))
+baseDir ='/Users/jm186072/Documents/DataScience/Jupyter Notebook/'
+store_path =  baseDir + '/B_ku_aku_1/'
+image_dir = baseDir + '/images/'
+
+files = os.listdir(image_dir)
+#img_store_path =  baseDir + '/images/'
+
+Images_list= []
+ALL_images = [] 
+size = 256,256
+
+Files
+final_write_dct = []
+final_write_dct = np.array(final_write_dct)
+type(final_write_dct)
+
+size=256, 256
+LPF_threA = 127 # 70 # 0 to 127
+LPF_threB = 50 # 75 # 100 # 200 # 1000 # 10000 # 20 # 75 # 25 # 0 to 2000-ish
+LPF_threC = 150
+
+arr = np.zeros((1,25), int)
+
+for i in files:
+    print(i)
+    im = Image.open(image_dir+i)
+    img_color = im.resize((size),Image.ANTIALIAS)
+    img_grey  = img_color.convert('L')
+    pixels = np.array(img_grey, dtype=np.float)
+    dct = fftpack.dct(fftpack.dct(pixels.T, norm='ortho').T, norm='ortho')
+    
+    dct[np.where(abs(dct)<LPF_threB)] = 0
+    
+    dct_LPF = dct[:5,:5].reshape(1,25)
+    
+    #print(dct_LPF.shape)
+    #final_dct = np.vstack((final_dct,dct_to_write))
+    arr = np.append(arr,dct_LPF,axis=0)
+        
+arr.shape
+ 
+
+#f = open('C:/Users/ST186052/Documents/git18b/R/R_gear_FFT_02/output/dct_px128_v01_0804.csv', 'w')
+f = open('/Users/jm186072/Documents/DataScience/Jupyter Notebook/dct_L1.csv', 'w')
+writer = csv.writer(f, lineterminator='\n')
+#writer.writerow(list)
+writer.writerows(arr[1:,:])
+f.close()
+
+   
+for i in Files:
+    
+    #Files1 = [item for item in Files if item != '.DS_Store']
+    print(i)
+    #print(im)
+
+
+
+   
+    #image1 = 'C:/Users/ST186052/Documents/git18b/R/R_gear_FFT_02/image/L1_lowerRight128_afterRem200micrometer.png'
+    #image1 ='L1_lowerRight256_afterRem100micrometer.png'
+    #size=128, 128
+    size=256, 256
+    
+    im        = Image.open(image_dir+i)
+    img_color = im.resize((size),Image.ANTIALIAS)
+    img_grey  = img_color.convert('L')
+    
+    fig = plt.figure(figsize=(8, 8))
+    
+#    plt.subplot(1, 3,  1)
+#    plt.imshow(np.array(img_color))
+#    plt.title("Color")
+#    
+#    plt.subplot(1, 3,  2)
+#    plt.imshow(np.array(img_grey))
+#    plt.title("Gray")
+    
+    pixels = np.array(img_grey, dtype=np.float)
+         
+    dct_size = pixels.shape[0]
+    reconstructed_images = []
+    
+    #2D Cosine Transform of Image
+    dct = fftpack.dct(fftpack.dct(pixels.T, norm='ortho').T, norm='ortho')
+    
+    
+    for ii in range(dct_size):
+        dct_copy = dct.copy()
+        dct_copy[ii:,:] = 0
+        dct_copy[:,ii:] = 0
+        
+        # Reconstructed image
+        # Get 2D Inverse Cosine Transform of Image
+        r_img = fftpack.idct(fftpack.idct(dct_copy.T, norm='ortho').T, norm='ortho')
+        
+        img = r_img.clip(0, 255)
+    #    img = r_img.clip(0, 180)
+        img = img.astype('uint8')
+        reconstructed_image = Image.fromarray(img)
+    
+        # Create a list of images
+        reconstructed_images.append(reconstructed_image);
+        
+    #r_img.shape
+       
+#    plt.figure(figsize=(6, 4));
+#    plt.scatter(range(dct.ravel().size), np.log10(np.abs(dct.ravel())), c='#348ABD', alpha=.3);
+#    plt.title('DCT Coefficient Amplitude vs. Order of Coefficient');
+#    plt.xlabel('Order of DCT Coefficients');
+#    plt.ylabel('DCT Coefficients Amplitude in log scale');
+#    
+#    plt.figure(figsize=(6,4))
+#    plt.hist(np.log10(np.abs(dct.ravel())), bins=100, color='#348ABD', alpha=.3, histtype='stepfilled');
+#    plt.xlabel('Amplitude of DCT Coefficients (log-scaled)');
+#    plt.ylabel('Number of DCT Coefficients');
+#    plt.title('Amplitude distribution of DCT Coefficients');
+#    
+#    plt.matshow(np.abs(dct[:50, :50]), cmap=plt.cm.Paired);
+#    plt.title('First 2500 coefficients in Grid');
+        
+#    fig = plt.figure(figsize=(8, 8))
+#    for ii in range(1):
+#    #    plt.subplot(1, 1, ii+1)
+#        plt.imshow(np.array(reconstructed_images[64]), cmap=plt.cm.gray)
+#        plt.grid(False)
+#        plt.xticks([])
+#        plt.yticks([])
+#        plt.title("Image #" + str(64+ii) )       
+#                  
+#    print(len(reconstructed_images))              
+#                  
+#    fig = plt.figure(figsize=(8, 8))
+#    for ii in range(1):
+#    #    plt.subplot(1, 1, ii+1)
+#        plt.imshow(np.array(reconstructed_images[128-1]), cmap=plt.cm.gray)
+#        plt.grid(False)
+#        plt.xticks([])
+#        plt.yticks([])
+#        plt.title("Image #" + str(128-1) )       
+#                  
+#    plt.figure()
+#    plt.hist(dct, range=(-500, 500))   
+#    axes = plt.gca()
+#    axes.set_ylim([0,20])  
+#    plt.figure()
+#    plt.hist(dct, range=(-100, 100))     
+#    #plt.hist(dct[:50, :50])     
+#    plt.figure()
+    
+    
+    
+    dct2 = dct.copy()
+    print(dct2[:1, :1])
+    dct2[:1, :1] = 0.01 * dct2[:1, :1]
+    print(dct2[:10, :10])
+    plt.matshow(np.abs(dct2[:20, :50]), cmap=plt.cm.Paired);
+    plt.title('First 2500 coefficients in Grid');
+    
+    reconstructed_images_LPF = []
+    LPF_threA = 127 # 70 # 0 to 127
+    LPF_threB = 50 # 75 # 100 # 200 # 1000 # 10000 # 20 # 75 # 25 # 0 to 2000-ish
+    LPF_threC = 150
+    print(len(dct[np.where(abs(dct)<LPF_threB)])) # 16084
+    print(len(dct[np.where(abs(dct)>=LPF_threB)])) # 300
+    print(np.where(abs(dct[0,:])>=LPF_threC))
+    print(np.where(abs(dct[:,0])>=LPF_threC))
+    print(np.round(dct2[:10,:10],0))
+    
+    
+    
+    for ii in range(dct_size):
+        dct_copy = dct.copy()
+        dct_copy[ii:,:] = 0
+        dct_copy[:,ii:] = 0
+        dct_copy[np.where(abs(dct_copy)<LPF_threB)] = 0
+    #    dct_copy = 1.5*dct_copy
+        # Reconstructed image
+        # Get 2D Inverse Cosine Transform of Image
+        r_img = fftpack.idct(fftpack.idct(dct_copy.T, norm='ortho').T, norm='ortho')
+        
+    #    img = r_img.clip(0, 255)
+        img = r_img.clip( 127-LPF_threA,  128+LPF_threA )
+        img = img.astype('uint8')
+        reconstructed_image = Image.fromarray(img)
+    
+        # Create a list of images
+        reconstructed_images_LPF.append(reconstructed_image);    
+                  
+        
+#    fig = plt.figure(figsize=(8, 8))
+#    for ii in range(1):
+#    #    plt.subplot(1, 1, ii+1)
+#        plt.imshow(np.array(reconstructed_images_LPF[LPF_threA-1]), cmap=plt.cm.gray)
+#        plt.grid(False)
+#        plt.xticks([])
+#        plt.yticks([])
+#        plt.title("Image #" + str(LPF_threA-1) )       
+    
+    #final_write_dct.shape
+    #final_Dct1.shape
+    dct_write = np.abs(dct_copy[:10, :50])
+    #type(dct_write)
+    final_Dct1 = dct_write.reshape(1,10*50)
+    print('DCT Shape-',final_Dct1.shape)
+    #final_Dct= np.vstack([final_Dct,final_Dct])
+    final_write_dct = np.concatenate([final_write_dct,final_Dct1],axis=0)
+    
+    
+    """
+    #dct_write2 = np.abs(dct2[:10, :50])
+    #c= dct_write.reshape(1,10*50)
+    #dct_write2 = np.abs(dct2[:10, :50])
+    #a = np.vstack([a,c])
+    # save dct
+    import csv
+    #f = open('C:/Users/ST186052/Documents/git18b/R/R_gear_FFT_02/output/dct_px128_v01_0804.csv', 'w')
+    f = open('dct_L1.csv', 'w')
+    writer = csv.writer(f, lineterminator='\n')
+    #writer.writerow(list)
+    writer.writerows(dct)
+    f.close()"""
+    
+ final_Dct1.shape   
+    
+import csv
+#f = open('C:/Users/ST186052/Documents/git18b/R/R_gear_FFT_02/output/dct_px128_v01_0804.csv', 'w')
+f = open('/Users/jm186072/Documents/DataScience/Jupyter Notebook/dct_L1.csv', 'w')
+writer = csv.writer(f, lineterminator='\n')
+#writer.writerow(list)
+writer.writerows(final_write_dct)
+f.close()
+
+    
+#################
+    # Regression Template
+
+# Importing the libraries
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+from sklearn.metrics import accuracy_score 
+from sklearn import metrics 
+
+
+# Importing the dataset
+dataset = pd.read_csv('/Users/jm186072/Documents/DataScience/Jupyter Notebook/dct_L1.csv', header=None)
+X = dataset.iloc[:, :-1].values
+y = dataset.iloc[:, -1:].values
+
+# Splitting the dataset into the Training set and Test set
+from sklearn.cross_validation import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 0)
+
+# Feature Scaling
+from sklearn.preprocessing import StandardScaler
+sc_X = StandardScaler()
+X_train = sc_X.fit_transform(X_train)
+X_test = sc_X.transform(X_test)
+sc_y = StandardScaler()
+y_train = sc_y.fit_transform(y_train)
+
+# Fitting the Regression Model to the dataset
+
+from sklearn.ensemble import RandomForestRegressor 
+regressor= RandomForestRegressor(n_estimators=300, random_state= 0 )
+regressor.fit(X_train, y_train)
+
+probs = regressor.predict(X_test)
+
+print(probs)
+#preds = probs[,]
+fpr, tpr, threshold = metrics.roc_curve(y_test, probs)
+roc_auc = metrics.auc(fpr, tpr)
+
+roc_auc
+
+
+# calculate the fpr and tpr for all thresholds of the classification
+probs = regressor.predict_proba(X_test)
+preds = probs[:,1]
+fpr, tpr, threshold = metrics.roc_curve(y_test, preds)
+roc_auc = metrics.auc(fpr, tpr)
+
+# method I: plt
+import matplotlib.pyplot as plt
+plt.title('Receiver Operating Characteristic')
+plt.plot(fpr, tpr, 'b', label = 'AUC = %0.2f' % roc_auc)
+plt.legend(loc = 'lower right')
+plt.plot([0, 1], [0, 1],'r--')
+plt.xlim([0, 1])
+plt.ylim([0, 1])
+plt.ylabel('True Positive Rate')
+plt.xlabel('False Positive Rate')
+plt.show()
+
+
+
+
+#getting length of unique labels
+#labels = list(np.unique(data['Label']))
+labels = list(np.unique(y_train))
+cm = metrics.confusion_matrix(y_test, classifier.predict(X_test),labels)
+#print(cm)
+fig,ax = plt.subplots(figsize=(12,8) )
+#plt.figure(figsize=(10,8))
+sns.heatmap(cm,annot=True,xticklabels=labels, yticklabels=labels,cmap='icefire',linewidths=.75,ax=ax)
+ax.set_xlabel('Predicted Labels')
+ax.set_ylabel('True Labels')
+ax.set_title("Confusion matrix")
+plt.show()
+
+
